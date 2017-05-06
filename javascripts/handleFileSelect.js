@@ -61,11 +61,9 @@ function maybeSetText(tag,text){
     }
   }
 
-  function addEventListenerToFileUploads(evt, doc) {
-    document=doc;
-    //var elements = document.getElementsByClassName('CorpusPreparationFiles');
-    var elements = document.getElementsByClassName('files');
-    var progress_bars = document.getElementsByClassName('percent');
+  function addEventListenerToFileUploads(evt) {
+    var elements = $('.files');
+    var progress_bars = $('.percent');
 
     for (let element of elements) {
       progress_bar = progress_bars[Object.keys(progress_bars_by_tag).length];
@@ -91,13 +89,13 @@ function maybeSetText(tag,text){
       alert('File read cancelled');
     };
     reader.onloadstart = function(e) {
-      document.getElementById('progress_bar').className = 'loading';
+      $('#progress_bar').className = 'loading';
     };
     reader.onload = function(e) {
       // Ensure that the progress bar displays 100% at the end.
       progress.style.width = '100%';
       progress.textContent = '100%';
-      setTimeout("document.getElementById('progress_bar').className='';", 2000);
+      setTimeout("$('#progress_bar').className='';", 2000);
       maybeSetText(tag,e.target.result);
       files_contents[tag] = e.target.result;
       if (tag in function_by_filename)
@@ -177,5 +175,6 @@ function maybeSetText(tag,text){
             }
         });
     });
+    addEventListenerToFileUploads();
 
 });
