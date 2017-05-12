@@ -122,13 +122,15 @@ function maybeSetText(tag,text){
         $.each(c , function(key,value){
             tableContent += '<tr>';
             tableContent += '<td>' + value[0] + '</td>';
-            tableContent += '<td>' + value[1] + '</td>';
+            tableContent += '<td> <input type="text" value = "'+ value[1] +
+                  '">  </td>';
             tableContent += '</tr>';
       });
 
       tableContent += '</tbody>'
       $('#PostEditionTable').html(tableContent);
-      $('#PostEditionTable2').html(tableContent);
+      $('#PostEditionTable2').html(tableContent.replace(/<input type="text" value = "/g,"").replace(/">  <\/td>/g, '</td>'));
+
 
 
   };
@@ -138,6 +140,7 @@ function maybeSetText(tag,text){
     if(files_contents["Untranslated_PE"] !== undefined && files_contents["Translated_PE"] !== undefined)
     {
       populateTable();
+      $("#SavePostEditionButton").css('visibility','visible');
     }
   }
 
@@ -162,19 +165,6 @@ function maybeSetText(tag,text){
   });
 
   $(document).ready(function(){
-    $("#TrainingButton").click(function(e){
-        e.preventDefault();
-        $.ajax({
-            type: "POST",
-            url: "Train",
-            success: function(result) {
-                $("#TrainingResults").text(result);
-            },
-            error: function(result) {
-                alert('error');
-            }
-        });
-    });
     addEventListenerToFileUploads();
 
 });
