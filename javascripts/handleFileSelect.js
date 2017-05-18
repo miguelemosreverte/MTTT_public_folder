@@ -69,7 +69,12 @@ function maybeSetText(tag,text){
       progress_bar = progress_bars[Object.keys(progress_bars_by_tag).length];
       progress_bars_by_tag[element.name] = progress_bar;
       element.addEventListener('change', handleFileSelect, false);
+      element.addEventListener('click', resetFileSelect, false);
     }
+  }
+
+  function resetFileSelect(evt) {
+    this.value=null;
   }
 
   function handleFileSelect(evt) {
@@ -105,52 +110,93 @@ function maybeSetText(tag,text){
     }
 
     // Read in the image file as a binary string.
-    reader.readAsBinaryString(evt.target.files[0]);
+    file = evt.target.files[0]
+    reader.readAsText(file, 'utf-8');
   }
 
-  function populateTable() {
+  function textAreaAdjust(o) {
+    o.style.height = "1px";
+    o.style.height = (o.scrollHeight)+"px";
+  }
 
-      var tableContent = '<thead><tr><th>Untranslated Source</th><th>Machine Translated</th></tr></thead><tbody>';
+  function createPEorDiffTableContent(a,b,is_postEdition,bilingualPE) {
+    var tableContent = '<thead><tr><th>'
+                      + (bilingualPE?'Untranslated Source':'Unedited MT')
+                      + '</th><th>'
+                      + (bilingualPE?'Machine Translated':'Edited MT')
+                      +'</th></tr></thead><tbody'
+                      +'>';
+    const text_area_constructor = '<textarea class="PE_TableEntry" onkeyup="textAreaAdjust(this)">'
 
-      //this will split the string into array line by line
-      var a = files_contents["Untranslated_PE"].split('\n');
-      var b = files_contents["Translated_PE"].split('\n');
-      var c = a.map(function (e, i) {
-          return [e, b[i]];
-      });
-        //here we're itraing the array which you've created and printing the values
-        $.each(c , function(key,value){
-            tableContent += '<tr>';
-            tableContent += '<td>' + value[0] + '</td>';
-            tableContent += '<td> <input type="text" value = "'+ value[1] +
-                  '">  </td>';
-            tableContent += '</tr>';
-      });
+    var c = a.map(function (e, i) {
+        return [e, b[i], i];
+    });
+    $.each(c , function(key,value){
+        tableContent += '<tr>';
+        tableContent += '<td>' + value[0] + '</td>';
+        tableContent += '<td> '+ (is_postEdition?text_area_constructor:"") + " " +
+                      value[1] + (is_postEdition?"</textarea>":"") + '</td>';
+        tableContent += '<td>' + (value[2] + 1) + '</td>';
+        tableContent += '</tr>';
+    });
+    tableContent += '</tbody>'
+    return tableContent;
+  }
 
-      tableContent += '</tbody>'
-      $('#PostEditionTable').html(tableContent);
-      $('#PostEditionTable2').html(tableContent.replace(/<input type="text" value = "/g,"").replace(/">  <\/td>/g, '</td>'));
+  function populateTable(bilingualPE) {
+
+      var a = files_contents["Translated_PE"].split('\n');
+      var b = bilingualPE? files_contents["Untranslated_PE"].split('\n') : a;
 
 
+      $('#PostEditionTable').html(createPEorDiffTableContent(b,a,true,bilingualPE));
+      $('#DifferencesTable').html(createPEorDiffTableContent(b,a,false,bilingualPE));
 
+      const text_areas = $(".PE_TableEntry");
+      for (var i = 0; i < text_areas.length; i++) {
+          textAreaAdjust(text_areas[i]);
+      }
   };
 
   function fillTablePE(file)
   {
-    if(files_contents["Untranslated_PE"] !== undefined && files_contents["Translated_PE"] !== undefined)
+    const valid_files = ((files_contents["Untranslated_PE"] !== undefined && files_contents["Translated_PE"] !== undefined)
+    || (!$('#BilingualPE').is(":checked") && files_contents["Translated_PE"] !== undefined));
+
+    const bilingualPE = $('#BilingualPE').is(":checked");
+    //const valid_files = (files_contents["Translated_PE"] !== undefined);
+    if(valid_files)
     {
-      populateTable();
+      populateTable(bilingualPE);
       $("#SavePostEditionButton").css('visibility','visible');
     }
   }
 
 
+  function GetAvailableLMs(){
+    $.ajax({
+              url:'GetAvailableLMs',
+              type:'POST',
+              success:function(result){
+              const parsedResult = JSON.parse(result);
+              $('#select_LM').empty();
+              for(var k in parsedResult) {
+                $('#select_LM').append($('<option>', {
+                    value : k,
+                    text : parsedResult[k]
+                }));
+              }
+            }
+    });
+  }
+
   $(function(){
     $("#CorpusPreparationForm").submit(function(event){
         event.preventDefault();
-        if(files_contents["TM_source"] === undefined) {alert("Ingrese source en Translation Model");}
-        else if(files_contents["TM_target"] === undefined) {alert("Ingrese target en Translation Model");}
-        else if(files_contents["LM"] === undefined) {alert("Ingrese un archivo en Language Model");}
+        if(files_contents["TM_source"] === undefined) {alert("Set a source for Translation Model");}
+        else if(files_contents["TM_target"] === undefined) {alert("Set a target for Translation Model");}
+        else if(files_contents["TM_target"] === undefined) {alert("Set a name for the Language Model");}
+        else if(files_contents["LM"] === undefined) {alert("Set a file for the Language Model");}
         else{
           $.ajax({
                   url:'CorpusPreparation',
@@ -158,13 +204,39 @@ function maybeSetText(tag,text){
                   data:$(this).serialize() + "&TM_source=" + files_contents["TM_source"] + "&TM_target=" + files_contents["TM_target"] + "&LM=" + files_contents["LM"],
                   success:function(result){
                       $("#CorpusPreparationResults").text(result);
+                      GetAvailableLMs();
                   }
           });
         }
     });
   });
 
+  $(function(){
+    $("#EvaluationForm").submit(function(event){
+        event.preventDefault();
+        var checkboxes = document.querySelectorAll('#EvaluationCheckboxes input[type="checkbox"]');
+        var checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
+        if(false){}
+        if(files_contents["Unchanged_MT"] === undefined) {alert("Set a source for Unchanged_MT");}
+        else if(files_contents["Changed_MT"] === undefined) {alert("Set a target for Changed_MT");}
+        else if (!checkedOne){alert("Check atleast one evaluation script");}
+        else{
+          $.ajax({
+                  url:'Evaluation',
+                  type:'POST',
+                  data:$(this).serialize() + "&UneditedMT=" + files_contents["UneditedMT"] + "&EditedMT=" + files_contents["EditedMT"],
+                  success:function(result){
+                      $("#EvaluationResults").text(result);
+                  }
+          });
+        }
+    });
+  });
   $(document).ready(function(){
     addEventListenerToFileUploads();
+
+    $('#BilingualPE').click(function(e){
+      fillTablePE(null);
+    });
 
 });
