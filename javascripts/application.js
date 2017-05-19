@@ -134,8 +134,7 @@
 
     $("#download_LM").click(function(e){
       text = $('#select_LM  option:selected').text();
-      alert(text);
-      //location.href = "GetLM/"+text;
+      location.href = "GetLM?LM_name="+text;
       });
 
 });
