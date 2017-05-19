@@ -17,8 +17,8 @@
 
 
     function scroll(is_postEdition, rowTop){
-        var className = '.scrollContent' + (is_postEdition?'PostEditionTable':'DifferencesTable')
-        $(className).animate({scrollTop:rowTop},1000) ;
+        var containerID = '#scrollContent' + (is_postEdition?'PostEditionTable':'DifferencesTable')
+        $(containerID).animate({scrollTop:rowTop},500) ;
     }
 
   $(document).ready(function(){
@@ -28,26 +28,29 @@
       $.ajax({
           type: "POST",
           url: "setLM",
-          data:"{&LM_name="+$("#select_LM option:selected" ).text()+ "}",
+          data:"LM_name="+$("#select_LM option:selected" ).text(),
           success: function(result) {
               $("#select_LM_success").text(result);
-          },
-          error: function(result) {
-              alert('error');
           }
       });
     });
 
     $("#TrainingButton").click(function(e){
         e.preventDefault();
+        $("#TrainingLoading").show();
         $.ajax({
             type: "POST",
             url: "Train",
             success: function(result) {
                 $("#TrainingResults").text(result);
+                $("#TrainingLoading").hide();
             },
             error: function(result) {
-                alert('error');
+                if (result.responseText.indexOf("TTT instance has no attribute 'language_model_name") !== -1)
+                {
+                  $("#TrainingResults").text("You need to create a model first, using the tab Corpus Preparation");
+                  $("#TrainingLoading").hide();
+                }
             }
         });
     });
@@ -104,10 +107,10 @@
       const row = $('#Differences').eq(rowIndex);
       $('#Differences tr:eq('+rowIndex+') td:eq('+0+')').html(colored_references[0]);
       $('#Differences tr:eq('+rowIndex+') td:eq('+1+')').html(colored_references[1]);
-});
+    });
 
 
-  $('#DifferencesSearch, #PostEditionSearch').on('input',function(e){
+    $('#DifferencesSearch, #PostEditionSearch').on('input',function(e){
       is_postEdition = ($(this).attr('id') == "PostEditionSearch")
       incompleteTableID = (is_postEdition? '#PostEdition':'#Differences');
       $(incompleteTableID+'SearchTable').html("");
@@ -117,18 +120,22 @@
       $(incompleteTableID+"Table tr td:odd").each(function() {
         rowIndex = $(this).closest('tr').index() + 1;
         row_top = $(this).closest('tr').offset().top - initial_offset
-        if ($(this).text().indexOf(searched_text) !== -1){
+        //TODO do this by batches, as the user scrolls
+        if ($(this).text().toUpperCase().indexOf(searched_text.toUpperCase()) !== -1 && searched_text.length>0){
           button_constructor = '<tr><td>'
-                    + rowIndex
-                    +'<input type="button" '
-                    + 'style="position:relative;max-width:100px;"'
+                    +'<button '
+                    + 'class="textSearch"'
                     + 'onclick="scroll('+is_postEdition+','+row_top+')" '
-                    +'value="'+$(this).text()+'"><td><tr>'
+                    +'>'+rowIndex+'<br>'+$(this).text()+'</button></td></tr>'
           $(incompleteTableID+'SearchTable').append(button_constructor);
         }
       });
     });
 
-
+    $("#download_LM").click(function(e){
+      text = $('#select_LM  option:selected').text();
+      alert(text);
+      //location.href = "GetLM/"+text;
+      });
 
 });

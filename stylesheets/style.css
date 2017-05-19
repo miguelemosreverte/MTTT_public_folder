@@ -107,6 +107,27 @@ input[type="file"] {
   background-color: white
   }
 
+/* Style buttons */
+.buttonload {
+      color: #6496c8;
+      background-color: white;
+      width: 50px;
+      display: none;
+      float : right;
+      font-size: 26px; /* Set a font size */
+}
+.textSearch, .textSearch:hover{
+    background-color: white;
+    border-style: solid;
+    position:relative;
+    color: black;
+    font-size: 10px;
+    text-shadow: none;
+}.textSearch:hover{
+    border-color: #6496c8;
+}.textSearch{
+    border-color: white;
+}
 button,.nav{
   font-family: "Bitter",serif;
   width: 100%;
@@ -139,6 +160,7 @@ th {
     width: 100%;
 }
 tr {
+        margin-top: 10px;
 }
 
 td{
@@ -152,10 +174,8 @@ table.tableSection thead, table.tableSection tbody {
     float: left;
     width: 100%;
 }
-table.tableSection tbody {
-}
-.scrollContentPostEditionTable{
-
+#scrollContentPostEditionTable,#scrollContentDifferencesTable,
+#PostEditionSearchTable tbody,#DifferencesSearchTable tbody{
       overflow: scroll;
       height: 300px;
       min-height: 300px;

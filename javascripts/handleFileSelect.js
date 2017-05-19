@@ -14,12 +14,14 @@ var text_locations = {
 */
 var function_by_filename= {
   "MT": function (text) {
+          $('#MachineTranslationLoading').show();
           $.ajax({
                   url:'Translate',
                   type:'POST',
                   data:"{&TranslationInput="+text+"}",
                   success:function(result){
                       maybeSetText("MT",result);
+                      $('#MachineTranslationLoading').hide();
                   }
           });
       },
@@ -124,8 +126,7 @@ function maybeSetText(tag,text){
                       + (bilingualPE?'Untranslated Source':'Unedited MT')
                       + '</th><th>'
                       + (bilingualPE?'Machine Translated':'Edited MT')
-                      +'</th></tr></thead><tbody'
-                      +'>';
+                      +'</th></tr></thead><tbody>';
     const text_area_constructor = '<textarea class="PE_TableEntry" onkeyup="textAreaAdjust(this)">'
 
     var c = a.map(function (e, i) {
@@ -168,7 +169,7 @@ function maybeSetText(tag,text){
     if(valid_files)
     {
       populateTable(bilingualPE);
-      $("#SavePostEditionButton").css('visibility','visible');
+      $("#SavePostEditionButton").show();
     }
   }
 
@@ -178,13 +179,16 @@ function maybeSetText(tag,text){
               url:'GetAvailableLMs',
               type:'POST',
               success:function(result){
-              const parsedResult = JSON.parse(result);
+              const parsedResult = result;
               $('#select_LM').empty();
               for(var k in parsedResult) {
                 $('#select_LM').append($('<option>', {
                     value : k,
                     text : parsedResult[k]
                 }));
+              }
+              if (parsedResult.length > 0) {
+                  $("#download_LM").css("visibility","visible");
               }
             }
     });
@@ -193,11 +197,12 @@ function maybeSetText(tag,text){
   $(function(){
     $("#CorpusPreparationForm").submit(function(event){
         event.preventDefault();
-        if(files_contents["TM_source"] === undefined) {alert("Set a source for Translation Model");}
+        if(!$('#LM_name').val()>0) {alert("Set a name for the Language Model");}
+        else if(files_contents["TM_source"] === undefined) {alert("Set a source for Translation Model");}
         else if(files_contents["TM_target"] === undefined) {alert("Set a target for Translation Model");}
-        else if(files_contents["TM_target"] === undefined) {alert("Set a name for the Language Model");}
         else if(files_contents["LM"] === undefined) {alert("Set a file for the Language Model");}
         else{
+        $('#CorpusLoading').show();
           $.ajax({
                   url:'CorpusPreparation',
                   type:'POST',
@@ -205,6 +210,7 @@ function maybeSetText(tag,text){
                   success:function(result){
                       $("#CorpusPreparationResults").text(result);
                       GetAvailableLMs();
+                      $('#CorpusLoading').hide();
                   }
           });
         }
@@ -216,22 +222,24 @@ function maybeSetText(tag,text){
         event.preventDefault();
         var checkboxes = document.querySelectorAll('#EvaluationCheckboxes input[type="checkbox"]');
         var checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
-        if(false){}
-        if(files_contents["Unchanged_MT"] === undefined) {alert("Set a source for Unchanged_MT");}
-        else if(files_contents["Changed_MT"] === undefined) {alert("Set a target for Changed_MT");}
+        if(files_contents["UneditedMT"] === undefined) {alert("Set a source for Unchanged_MT");}
+        else if(files_contents["EditedMT"] === undefined) {alert("Set a target for Changed_MT");}
         else if (!checkedOne){alert("Check atleast one evaluation script");}
         else{
+          $('#EvaluateLoading').show();
           $.ajax({
                   url:'Evaluation',
                   type:'POST',
                   data:$(this).serialize() + "&UneditedMT=" + files_contents["UneditedMT"] + "&EditedMT=" + files_contents["EditedMT"],
                   success:function(result){
                       $("#EvaluationResults").text(result);
+                      $('#EvaluateLoading').hide();
                   }
           });
         }
     });
   });
+
   $(document).ready(function(){
     addEventListenerToFileUploads();
 
