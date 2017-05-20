@@ -197,6 +197,8 @@ function maybeSetText(tag,text){
   $(function(){
     $("#CorpusPreparationForm").submit(function(event){
         event.preventDefault();
+
+        GetAvailableLMs();//update the available Language Models so that no name collision occurs
         if(!$('#LM_name').val()>0) {alert("Set a name for the Language Model");}
         else if ($('#select_LM').text().includes($('#LM_name').val()) )
                                                            {alert("This model name has been already taken.");}
