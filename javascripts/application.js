@@ -89,8 +89,8 @@
 
     $('#PostEditionTable').on('change', 'td textarea', function()
     {
-      var unmodified_MT = $(this).closest('td').prev('td').html().split(" ");
-      var modified_MT = $(this).val().split(" ");;
+      var unmodified_MT = $(this).closest('td').prev('td').html().split(/\s+/);
+      var modified_MT = $(this).val().split(/\s+/);
 
 
       const references = [unmodified_MT,modified_MT];
