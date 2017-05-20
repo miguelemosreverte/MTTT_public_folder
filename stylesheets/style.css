@@ -204,3 +204,38 @@ table.tableSection th, table.tableSection td {
     overflow: hidden;
     resize: none;
 }
+
+
+.arrow_box, .arrow_box:hover {
+	position: relative;
+	border: 4px solid #4CAF50;
+  border-radius: 10px;
+
+  color:white;
+  font-weight: bold;
+  font-size: 10px;
+  font-family:monospace;
+  background-color:  #4CAF50;
+  float:right;
+  transition: all .2s ease-in-out;
+}
+.arrow_box:hover {
+  text-decoration: none;
+  transform: scale(1.1);
+}
+.arrow_box:after {
+	top: 100%;
+	left: 80%;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+}
+
+.arrow_box:after {
+	border-color: transparent;
+	border-top-color: #4CAF50;
+	border-width: 10px;
+}
