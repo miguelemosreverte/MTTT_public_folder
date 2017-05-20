@@ -198,6 +198,8 @@ function maybeSetText(tag,text){
     $("#CorpusPreparationForm").submit(function(event){
         event.preventDefault();
         if(!$('#LM_name').val()>0) {alert("Set a name for the Language Model");}
+        else if ($('#select_LM').text().includes($('#LM_name').val()) )
+                                                           {alert("This model name has been already taken.");}
         else if($('#source_lang  option:selected').text() === $('#target_lang  option:selected').text())
                                                            {alert("Select different source and target languages");}
         else if(files_contents["TM_source"] === undefined) {alert("Set a source for Translation Model");}
