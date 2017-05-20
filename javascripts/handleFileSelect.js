@@ -177,7 +177,7 @@ function maybeSetText(tag,text){
   function GetAvailableLMs(){
     $.ajax({
               url:'GetAvailableLMs',
-              type:'POST',
+              type:'GET',
               success:function(result){
               const parsedResult = result;
               $('#select_LM').empty();
@@ -198,6 +198,8 @@ function maybeSetText(tag,text){
     $("#CorpusPreparationForm").submit(function(event){
         event.preventDefault();
         if(!$('#LM_name').val()>0) {alert("Set a name for the Language Model");}
+        else if($('#source_lang  option:selected').text() === $('#target_lang  option:selected').text())
+                                                           {alert("Select different source and target languages");}
         else if(files_contents["TM_source"] === undefined) {alert("Set a source for Translation Model");}
         else if(files_contents["TM_target"] === undefined) {alert("Set a target for Translation Model");}
         else if(files_contents["LM"] === undefined) {alert("Set a file for the Language Model");}
@@ -206,7 +208,13 @@ function maybeSetText(tag,text){
           $.ajax({
                   url:'CorpusPreparation',
                   type:'POST',
-                  data:$(this).serialize() + "&TM_source=" + files_contents["TM_source"] + "&TM_target=" + files_contents["TM_target"] + "&LM=" + files_contents["LM"],
+                  data:
+                    "source_lang=" + $('#source_lang  option:selected').text()
+                    + "&target_lang=" + $('#target_lang  option:selected').text()
+                    + "&LM_name=" + $('#LM_name').val()
+                    +"&TM_source=" + files_contents["TM_source"]
+                    + "&TM_target=" + files_contents["TM_target"]
+                    + "&LM=" + files_contents["LM"],
                   success:function(result){
                       $("#CorpusPreparationResults").html(result);
                       GetAvailableLMs();

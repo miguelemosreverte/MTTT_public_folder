@@ -21,9 +21,32 @@
         $(containerID).animate({scrollTop:rowTop},500) ;
     }
 
+  function GetAvailableLanguages(){
+    $.ajax({
+              url:'GetAvailableLanguages',
+              type:'GET',
+              success:function(result){
+              const parsedResult = result;
+              $('#source_lang').empty();
+              $('#target_lang').empty();
+              for(var k in parsedResult) {
+                $('#source_lang').append($('<option>', {
+                    value : k,
+                    text : parsedResult[k]
+                }));
+                $('#target_lang').append($('<option>', {
+                    value : k,
+                    text : parsedResult[k]
+                }));
+              }
+            }
+    });
+  }
+
   $(document).ready(function(){
 
     GetAvailableLMs();
+    GetAvailableLanguages();
     $('#select_LM').change(function(e){
       $.ajax({
           type: "POST",
