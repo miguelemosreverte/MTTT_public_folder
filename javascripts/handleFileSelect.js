@@ -179,26 +179,79 @@ function maybeSetText(tag,text){
               url:'GetAvailableLMs',
               type:'GET',
               success:function(result){
-              const parsedResult = result;
-              $('#select_LM').empty();
-              for(var k in parsedResult) {
-                $('#select_LM').append($('<option>', {
-                    value : k,
-                    text : parsedResult[k]
-                }));
-              }
-              if (parsedResult.length > 0) {
-                  $("#download_LM").css("visibility","visible");
-              }
+                const parsedResult = result;
+                $('#select_LM').empty();
+                for(var k in parsedResult) {
+                  $('#select_LM').append($('<option>', {
+                      value : k,
+                      text : parsedResult[k]
+                  }));
+                }
+                if (parsedResult.length > 0) {
+                    $("#download_LM").css("visibility","visible");
+                }
             }
     });
   }
+
+
+  function PostTheCorpusPreparation(){
+    $.ajax({
+            url:'CorpusPreparation',
+            type:'POST',
+            data:
+              "source_lang=" + $('#source_lang  option:selected').text()
+              + "&target_lang=" + $('#target_lang  option:selected').text()
+              + "&LM_name=" + $('#LM_name').val()
+              +"&TM_source=" + files_contents["TM_source"]
+              + "&TM_target=" + files_contents["TM_target"]
+              + "&LM=" + files_contents["LM"],
+            success:function(result){
+                $("#CorpusPreparationResults").html(result);
+                $('#CorpusLoading').hide();
+            }
+            error: function(err){
+                alert("There was an error, try again.")
+                $('#CorpusLoading').hide();
+            }
+    });
+  }
+
+  function TryToPostTheCorpusPreparation(){
+    $('#CorpusLoading').show();
+    $.ajax({
+              url:'GetAvailableLMs',
+              type:'GET',
+              success:function(result){
+                  const parsedResult = result;
+                  $('#select_LM').empty();
+                  for(var k in parsedResult) {
+                    $('#select_LM').append($('<option>', {
+                        value : k,
+                        text : parsedResult[k]
+                    }));
+                  }
+
+                  if($('#source_lang  option:selected').text() === $('#target_lang  option:selected').text()){
+                    alert("Select different source and target languages");
+                  }
+                  else {
+                    PostTheCorpusPreparation()
+                  }
+              }
+              error: function(err){
+                  alert("There was an error, try again.")
+                  $('#CorpusLoading').hide();
+              }
+    });
+  }
+
 
   $(function(){
     $("#CorpusPreparationForm").submit(function(event){
         event.preventDefault();
 
-        GetAvailableLMs();//update the available Language Models so that no name collision occurs
+
         if(!$('#LM_name').val()>0) {alert("Set a name for the Language Model");}
         else if ($('#select_LM').text().includes($('#LM_name').val()) )
                                                            {alert("This model name has been already taken.");}
@@ -208,23 +261,7 @@ function maybeSetText(tag,text){
         else if(files_contents["TM_target"] === undefined) {alert("Set a target for Translation Model");}
         else if(files_contents["LM"] === undefined) {alert("Set a file for the Language Model");}
         else{
-        $('#CorpusLoading').show();
-          $.ajax({
-                  url:'CorpusPreparation',
-                  type:'POST',
-                  data:
-                    "source_lang=" + $('#source_lang  option:selected').text()
-                    + "&target_lang=" + $('#target_lang  option:selected').text()
-                    + "&LM_name=" + $('#LM_name').val()
-                    +"&TM_source=" + files_contents["TM_source"]
-                    + "&TM_target=" + files_contents["TM_target"]
-                    + "&LM=" + files_contents["LM"],
-                  success:function(result){
-                      $("#CorpusPreparationResults").html(result);
-                      GetAvailableLMs();
-                      $('#CorpusLoading').hide();
-                  }
-          });
+            TryToPostTheCorpusPreparation();
         }
     });
   });
