@@ -28,10 +28,7 @@
       $.ajax({
           type: "POST",
           url: "setLM",
-          data:"LM_name="+$("#select_LM option:selected" ).text(),
-          success: function(result) {
-              $("#select_LM_success").text(result);
-          }
+          data:"LM_name="+$("#select_LM option:selected" ).text()
       });
     });
 
