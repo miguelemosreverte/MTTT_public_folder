@@ -208,7 +208,7 @@ function maybeSetText(tag,text){
                   type:'POST',
                   data:$(this).serialize() + "&TM_source=" + files_contents["TM_source"] + "&TM_target=" + files_contents["TM_target"] + "&LM=" + files_contents["LM"],
                   success:function(result){
-                      $("#CorpusPreparationResults").text(result);
+                      $("#CorpusPreparationResults").html(result);
                       GetAvailableLMs();
                       $('#CorpusLoading').hide();
                   }
