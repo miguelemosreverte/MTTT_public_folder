@@ -83,9 +83,20 @@
       filename = filename.split('\\').pop(); //remove fake path
       download(filename, text);
 
-
     });
 
+    $("#StartMachineTranslation").click(function(e){
+           $('#MachineTranslationLoading').show();
+           $.ajax({
+                   url:'Translate',
+                   type:'POST',
+                   data:"LM_name="+$("#select_LM option:selected" ).text()+"&TranslationInput="+ files_contents["MT"],
+                   success:function(result){
+                       maybeSetText("MT",result);
+                       $('#MachineTranslationLoading').hide();
+                   }
+           });
+    });
 
     $('#PostEditionTable').on('change', 'td textarea', function()
     {

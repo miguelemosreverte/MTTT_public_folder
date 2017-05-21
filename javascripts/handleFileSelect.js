@@ -13,19 +13,7 @@ var text_locations = {
   a text file with function to perform with the new information
 */
 var function_by_filename= {
-  "MT": function (text) {
-          $('#MachineTranslationLoading').show();
-          $.ajax({
-                  url:'Translate',
-                  type:'POST',
-
-                  data:"LM_name="+$("#select_LM option:selected" ).text()+"&TranslationInput="+text,
-                  success:function(result){
-                      maybeSetText("MT",result);
-                      $('#MachineTranslationLoading').hide();
-                  }
-          });
-      },
+  //"MT":, the automated start of translation has been erased, now a button is used
   "Untranslated_PE": fillTablePE,
   "Translated_PE": fillTablePE,
 };
