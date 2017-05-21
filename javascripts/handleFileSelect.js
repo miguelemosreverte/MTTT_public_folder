@@ -18,7 +18,8 @@ var function_by_filename= {
           $.ajax({
                   url:'Translate',
                   type:'POST',
-                  data:"{&TranslationInput="+text+"}",
+
+                  data:"LM_name="+$("#select_LM option:selected" ).text()+"&TranslationInput="+text,
                   success:function(result){
                       maybeSetText("MT",result);
                       $('#MachineTranslationLoading').hide();
