@@ -209,7 +209,7 @@ function maybeSetText(tag,text){
             success:function(result){
                 $("#CorpusPreparationResults").html(result);
                 $('#CorpusLoading').hide();
-            }
+            },
             error: function(err){
                 alert("There was an error, try again.")
                 $('#CorpusLoading').hide();
@@ -238,7 +238,7 @@ function maybeSetText(tag,text){
                   else {
                     PostTheCorpusPreparation()
                   }
-              }
+              },
               error: function(err){
                   alert("There was an error, try again.")
                   $('#CorpusLoading').hide();
