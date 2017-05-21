@@ -98,6 +98,10 @@
            });
     });
 
+    $("#StartPostEditing").click(function(e){
+        fillTablePE()
+    });
+
     $('#PostEditionTable').on('change', 'td textarea', function()
     {
       var unmodified_MT = $(this).closest('td').prev('td').html().split(/\s+/);

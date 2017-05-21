@@ -13,9 +13,11 @@ var text_locations = {
   a text file with function to perform with the new information
 */
 var function_by_filename= {
-  //"MT":, the automated start of translation has been erased, now a button is used
-  "Untranslated_PE": fillTablePE,
-  "Translated_PE": fillTablePE,
+  //"MT":, // the automated start of translation has been erased, now a button is used
+  //"Untranslated_PE": fillTablePE, //this function will also be performed by a button
+  //"Translated_PE": fillTablePE,  //and so is this one
+
+  //insert here functions to be performed right after file contents are uploaded
 };
 
 function maybeSetText(tag,text){
