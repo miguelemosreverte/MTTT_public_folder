@@ -76,6 +76,7 @@
     });
 
     $("#SavePostEditionButton").click(function(e){
+      needsToSavePostEditionProgress = false;
       var text = $.map($('#PostEditionTable td:nth-child(2)'),function(td){
          return $(td).text();
       }).join('\n');
@@ -104,7 +105,10 @@
 
     $('#PostEditionTable').on('change', 'td textarea', function()
     {
-      var unmodified_MT = $(this).closest('td').prev('td').html().split(/\s+/);
+      needsToSavePostEditionProgress = true
+
+      const rowIndex = $(this).closest('tr').index() + 1;
+      var unmodified_MT = $('#Differences tr:eq('+rowIndex+') td:eq('+0+')').html().split(/\s+/);
       var modified_MT = $(this).val().split(/\s+/);
 
 
@@ -138,7 +142,6 @@
             colored_references[1]  += span_start.replace("the_color",green)+ references[1].slice(five_tuple[3],five_tuple[4]).join(" ")  + span_end + " ";
         }
       }
-      const rowIndex = $(this).closest('tr').index() + 1;
       const row = $('#Differences').eq(rowIndex);
       $('#Differences tr:eq('+rowIndex+') td:eq('+0+')').html(colored_references[0]);
       $('#Differences tr:eq('+rowIndex+') td:eq('+1+')').html(colored_references[1]);
@@ -152,7 +155,7 @@
       searched_text = $(this).val();
 
       initial_offset = $(incompleteTableID+"Table tr td:eq(0)").offset().top - $(incompleteTableID+"Table tr td:eq(0)").height() / 2
-      $(incompleteTableID+"Table tr td:odd").each(function() {
+      $(incompleteTableID+"Table tr td:nth-child(1)").each(function() {
         rowIndex = $(this).closest('tr').index() + 1;
         row_top = $(this).closest('tr').offset().top - initial_offset
         //TODO do this by batches, as the user scrolls

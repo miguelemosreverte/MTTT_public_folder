@@ -126,9 +126,9 @@ function maybeSetText(tag,text){
     $.each(c , function(key,value){
         tableContent += '<tr>';
         tableContent += '<td>' + value[0] + '</td>';
-        tableContent += '<td> '+ (is_postEdition?text_area_constructor:"") + " " +
+        tableContent += '<td>'+ (is_postEdition?text_area_constructor:"")+
                       value[1] + (is_postEdition?"</textarea>":"") + '</td>';
-        tableContent += '<td>' + (value[2] + 1) + '</td>';
+        tableContent += '<td>'+ (value[2] + 1) + '</td>';
         tableContent += '</tr>';
     });
     tableContent += '</tbody>'
@@ -136,17 +136,20 @@ function maybeSetText(tag,text){
   }
 
   function populateTable(bilingualPE) {
+      if ( 'undefined' === typeof needsToSavePostEditionProgress) needsToSavePostEditionProgress = false;
+      if (needsToSavePostEditionProgress){alert("You should save your work first!");}
+      else{
+        var a = files_contents["Translated_PE"].split('\n');
+        var b = bilingualPE? files_contents["Untranslated_PE"].split('\n') : a;
 
-      var a = files_contents["Translated_PE"].split('\n');
-      var b = bilingualPE? files_contents["Untranslated_PE"].split('\n') : a;
 
+        $('#PostEditionTable').html(createPEorDiffTableContent(b,a,true,bilingualPE));
+        $('#DifferencesTable').html(createPEorDiffTableContent(a,a,false,false));
 
-      $('#PostEditionTable').html(createPEorDiffTableContent(b,a,true,bilingualPE));
-      $('#DifferencesTable').html(createPEorDiffTableContent(b,a,false,bilingualPE));
-
-      const text_areas = $(".PE_TableEntry");
-      for (var i = 0; i < text_areas.length; i++) {
-          textAreaAdjust(text_areas[i]);
+        const text_areas = $(".PE_TableEntry");
+        for (var i = 0; i < text_areas.length; i++) {
+            textAreaAdjust(text_areas[i]);
+        }
       }
   };
 
@@ -156,11 +159,9 @@ function maybeSetText(tag,text){
     || (!$('#BilingualPE').is(":checked") && files_contents["Translated_PE"] !== undefined));
 
     const bilingualPE = $('#BilingualPE').is(":checked");
-    //const valid_files = (files_contents["Translated_PE"] !== undefined);
     if(valid_files)
     {
       populateTable(bilingualPE);
-      $("#SavePostEditionButton").show();
     }
   }
 
@@ -284,7 +285,28 @@ function maybeSetText(tag,text){
     addEventListenerToFileUploads();
 
     $('#BilingualPE').click(function(e){
-      fillTablePE(null);
+      if (!$('#PostEditionTable').is(':empty')) {
+        var EditedMT_html=[];
+        $('#PostEditionTable textarea').each( function(){EditedMT_html.push( $(this).val() );});
+        const valid_files = ((files_contents["Untranslated_PE"] !== undefined && files_contents["Translated_PE"] !== undefined)
+        || (!$('#BilingualPE').is(":checked") && files_contents["Translated_PE"] !== undefined));
+
+        const bilingualPE = $('#BilingualPE').is(":checked");
+        if(valid_files)
+        {
+
+                var a = files_contents["Translated_PE"].split('\n');
+                var b = bilingualPE? files_contents["Untranslated_PE"].split('\n') : a;
+
+                $('#PostEditionTable').html(createPEorDiffTableContent(b,(EditedMT_html[0]===undefined)?a:EditedMT_html,true,bilingualPE));
+
+                const text_areas = $(".PE_TableEntry");
+                for (var i = 0; i < text_areas.length; i++) {
+                    textAreaAdjust(text_areas[i]);
+                }
+          $("#SavePostEditionButton").show();
+        }
+      }
     });
 
 });
