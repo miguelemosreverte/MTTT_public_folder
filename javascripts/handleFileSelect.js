@@ -1,33 +1,31 @@
 
-var files_contents = new Object;
-var progress_bars_by_tag = {};
-/*text_locations links the name of the input in where to upload
-  a text file with the id of the <!> in where to show the text
-*/
-var text_locations = {
+    var uploaders = [];
+
+
+var UI_state = new Object;
+UI_state.files_contents = {};
+UI_state.progress_bars_by_tag = {};
+UI_state.constants = {};
+UI_state.constants.text_locations = {
+  /*UI_state.constants.text_locations links the name of the input in where to voldemort
+    a text file with the id of the <!> in where to show the text
+  */
   "MT": "#MachineTranslationResults"
   // etc.
 };
-
-/*function_by_filename links the name of the input in where to upload
-  a text file with function to perform with the new information
-*/
-var function_by_filename= {
+UI_state.constants.function_by_filename = {
+  /*UI_state.constants.function_by_filename links the name of the input in where to voldemort
+    a text file with function to perform with the new information
+  */
   //"MT":, // the automated start of translation has been erased, now a button is used
   //"Untranslated_PE": fillTablePE, //this function will also be performed by a button
   //"Translated_PE": fillTablePE,  //and so is this one
 
   //insert here functions to be performed right after file contents are uploaded
 };
+UI_state.file_manipulation_functions = {
 
-function maybeSetText(tag,text){
-  if (tag in text_locations)
-  {
-    $(text_locations[tag]).text(text);
-  }
-}
-
-  function errorHandler(evt) {
+  errorHandler : function (evt) {
     switch(evt.target.error.code) {
       case evt.target.error.NOT_FOUND_ERR:
         alert('File Not Found!');
@@ -40,9 +38,9 @@ function maybeSetText(tag,text){
       default:
         alert('An error occurred reading this file.');
     };
-  }
+  },
 
-  function updateProgress(evt,progress) {
+  updateProgress : function (evt,progress) {
     // evt is an ProgressEvent.
     if (evt.lengthComputable) {
       var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
@@ -52,60 +50,100 @@ function maybeSetText(tag,text){
         progress.textContent = percentLoaded + '%';
       }
     }
-  }
+  },
 
-  function addEventListenerToFileUploads(evt) {
+  addEventListenerToFileUploads : function (evt) {
     var elements = $('.files');
     var progress_bars = $('.percent');
 
     for (let element of elements) {
-      progress_bar = progress_bars[Object.keys(progress_bars_by_tag).length];
-      progress_bars_by_tag[element.name] = progress_bar;
-      element.addEventListener('change', handleFileSelect, false);
-      element.addEventListener('click', resetFileSelect, false);
+      progress_bar = progress_bars[Object.keys(UI_state.progress_bars_by_tag).length];
+      UI_state.progress_bars_by_tag[element.name] = progress_bar;
+      element.addEventListener('change', UI_state.file_manipulation_functions.handleFileSelect, false);
+      element.addEventListener('click', UI_state.file_manipulation_functions.resetFileSelect, false);
     }
-  }
+  },
 
-  function resetFileSelect(evt) {
-    this.value=null;
-  }
+  resetFileSelect : function (evt) {
+      this.value=null;
+  },
 
-  function handleFileSelect(evt) {
+  upload : function (username, blobOrFile) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/uploadFiles', true);
+      xhr.onloadend = function (e) {
+          uploaders.pop();
+          if (!uploaders.length) {
+              console.log(' All Done! ');
+          }
+      };
+      uploaders.push(xhr);
+      //xhr.send(blobOrFile);
+      xhr.send(JSON.stringify({ name : username, text: blobOrFile}))
+  },
 
-    //tag examples: "LM" indicates that the file should be saved as the Language Model
-    var tag = this.name;
+  handleFileSelect : function (evt) {
 
-    var progress = progress_bars_by_tag[tag];
-    // Reset progress indicator on new file selection.
-    progress.style.width = '10%';
-    progress.textContent = '0%';
+      //tag examples: "LM" indicates that the file should be saved as the Language Model
+      var tag = this.name;
 
-    var reader = new FileReader();
-    reader.onerror = errorHandler;
-    reader.onprogress = updateProgress(progress);
-    reader.onabort = function(e) {
-      alert('File read cancelled');
-    };
-    reader.onloadstart = function(e) {
-      $('#progress_bar').className = 'loading';
-    };
-    reader.onload = function(e) {
-      // Ensure that the progress bar displays 100% at the end.
-      progress.style.width = '100%';
-      progress.textContent = '100%';
-      setTimeout("$('#progress_bar').className='';", 2000);
-      maybeSetText(tag,e.target.result);
-      files_contents[tag] = e.target.result;
-      if (tag in function_by_filename)
-      {
-        function_by_filename[tag](e.target.result);
+      var progress = UI_state.progress_bars_by_tag[tag];
+      // Reset progress indicator on new file selection.
+      progress.style.width = '10%';
+      progress.textContent = '0%';
+
+      var reader = new FileReader();
+      reader.onerror = UI_state.file_manipulation_functions.errorHandler;
+      reader.onprogress = UI_state.file_manipulation_functions.updateProgress(progress);
+      reader.onabort = function(e) {
+        alert('File read cancelled');
+      };
+      reader.onloadstart = function(e) {
+        $('#progress_bar').className = 'loading';
+      };
+      reader.onload = function(e) {
+        // Ensure that the progress bar displays 100% at the end.
+        progress.style.width = '100%';
+        progress.textContent = '100%';
+        setTimeout("$('#progress_bar').className='';", 2000);
+
+        UI_state.files_contents[tag] = e.target.result;
+        if (tag in UI_state.constants.function_by_filename){
+          UI_state.constants.function_by_filename[tag](e.target.result);
+        }
+        if (tag in UI_state.constants.text_locations){
+          $(UI_state.constants.text_locations[tag]).text(e.target.result);
+        }
+
+
+        blob = UI_state.files_contents[tag]
+        var BYTES_PER_CHUNK, SIZE, NUM_CHUNKS, start, end;
+
+        BYTES_PER_CHUNK = 1048576;
+        SIZE = blob.size;
+        NUM_CHUNKS = Math.max(Math.ceil(SIZE / BYTES_PER_CHUNK), 1);
+        start = 0;
+        end = BYTES_PER_CHUNK;
+        while (start < SIZE) {
+            upload(tag, blob.slice(start, end));
+            start = end;
+            end = start + BYTES_PER_CHUNK;
+        }
       }
+
+      // Read in the image file as a binary string.
+      const file = evt.target.files[0]
+      reader.readAsText(file, 'utf-8');
+      //reader.readAsDataURL( file )
     }
 
-    // Read in the image file as a binary string.
-    file = evt.target.files[0]
-    reader.readAsText(file, 'utf-8');
-  }
+}
+
+
+
+
+
+
 
   function textAreaAdjust(o) {
     o.style.height = "1px";
@@ -139,8 +177,8 @@ function maybeSetText(tag,text){
       if ( 'undefined' === typeof needsToSavePostEditionProgress) needsToSavePostEditionProgress = false;
       if (needsToSavePostEditionProgress){alert("You should save your work first!");}
       else{
-        var a = files_contents["Translated_PE"].split('\n');
-        var b = bilingualPE? files_contents["Untranslated_PE"].split('\n') : a;
+        var a = UI_state.files_contents["Translated_PE"].split('\n');
+        var b = bilingualPE? UI_state.files_contents["Untranslated_PE"].split('\n') : a;
 
 
         $('#PostEditionTable').html(createPEorDiffTableContent(b,a,true,bilingualPE));
@@ -155,8 +193,8 @@ function maybeSetText(tag,text){
 
   function fillTablePE(file)
   {
-    const valid_files = ((files_contents["Untranslated_PE"] !== undefined && files_contents["Translated_PE"] !== undefined)
-    || (!$('#BilingualPE').is(":checked") && files_contents["Translated_PE"] !== undefined));
+    const valid_files = ((UI_state.files_contents["Untranslated_PE"] !== undefined && UI_state.files_contents["Translated_PE"] !== undefined)
+    || (!$('#BilingualPE').is(":checked") && UI_state.files_contents["Translated_PE"] !== undefined));
 
     const bilingualPE = $('#BilingualPE').is(":checked");
     if(valid_files)
@@ -187,25 +225,40 @@ function maybeSetText(tag,text){
   }
 
 
+
   function PostTheCorpusPreparation(){
+    //inner debugging function
+    const toType = function(obj) {
+      return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+    }
+
+    const tm_source = UI_state.files_contents["TM_source"]//.split("\n");
+    const tm_target = UI_state.files_contents["TM_target"]//.split("\n");
+
+    //const blob_tm_source = new Blob(tm_source, { type: "text/plain" });
+    //const blob_tm_target = new Blob(tm_target, { type: "text/plain" });
+
+    const moses_data = {
+      source_lang : $('#source_lang  option:selected').text()
+      , target_lang : $('#source_lang  option:selected').text()
+      , LM_name : $('#LM_name').val()
+      , TM_source : tm_source
+      , TM_target : tm_target
+      , LM : UI_state.files_contents["LM"]
+    };
+    console.log(moses_data);
     $.ajax({
-            url:'CorpusPreparation',
-            type:'POST',
-            data:
-              "source_lang=" + $('#source_lang  option:selected').text()
-              + "&target_lang=" + $('#target_lang  option:selected').text()
-              + "&LM_name=" + $('#LM_name').val()
-              +"&TM_source=" + files_contents["TM_source"]
-              + "&TM_target=" + files_contents["TM_target"]
-              + "&LM=" + files_contents["LM"],
-            success:function(result){
-                $("#CorpusPreparationResults").html(result);
-                $('#CorpusLoading').hide();
-            },
-            error: function(err){
-                alert("There was an error, try again.")
-                $('#CorpusLoading').hide();
-            }
+        url:'CorpusPreparation',
+        type:'POST',
+        data : moses_data,
+        success:function(resp){
+          $("#CorpusPreparationResults").html(resp);
+          $('#CorpusLoading').hide();
+        },
+        error: function(err){
+          alert("There was an error, try again.")
+          $('#CorpusLoading').hide();
+        }
     });
   }
 
@@ -249,11 +302,11 @@ function maybeSetText(tag,text){
                                                            {alert("This model name has been already taken.");}
         else if($('#source_lang  option:selected').text() === $('#target_lang  option:selected').text())
                                                            {alert("Select different source and target languages");}
-        else if(files_contents["TM_source"] === undefined) {alert("Set a source for Translation Model");}
-        else if(files_contents["TM_target"] === undefined) {alert("Set a target for Translation Model");}
-        else if(files_contents["LM"] === undefined) {alert("Set a file for the Language Model");}
+        else if(UI_state.files_contents["TM_source"] === undefined) {alert("Set a source for Translation Model");}
+        else if(UI_state.files_contents["TM_target"] === undefined) {alert("Set a target for Translation Model");}
+        else if(UI_state.files_contents["LM"] === undefined) {alert("Set a file for the Language Model");}
         else{
-            TryToPostTheCorpusPreparation();
+            //TryToPostTheCorpusPreparation();
         }
     });
   });
@@ -263,15 +316,15 @@ function maybeSetText(tag,text){
         event.preventDefault();
         var checkboxes = document.querySelectorAll('#EvaluationCheckboxes input[type="checkbox"]');
         var checkedOne = Array.prototype.slice.call(checkboxes).some(x => x.checked);
-        if(files_contents["UneditedMT"] === undefined) {alert("Set a source for Unchanged_MT");}
-        else if(files_contents["EditedMT"] === undefined) {alert("Set a target for Changed_MT");}
+        if(UI_state.files_contents["UneditedMT"] === undefined) {alert("Set a source for Unchanged_MT");}
+        else if(UI_state.files_contents["EditedMT"] === undefined) {alert("Set a target for Changed_MT");}
         else if (!checkedOne){alert("Check atleast one evaluation script");}
         else{
           $('#EvaluateLoading').show();
           $.ajax({
                   url:'Evaluation',
                   type:'POST',
-                  data:$(this).serialize() + "&UneditedMT=" + files_contents["UneditedMT"] + "&EditedMT=" + files_contents["EditedMT"],
+                  data:$(this).serialize() + "&UneditedMT=" + UI_state.files_contents["UneditedMT"] + "&EditedMT=" + UI_state.files_contents["EditedMT"],
                   success:function(result){
                       $("#EvaluationResults").text(result);
                       $('#EvaluateLoading').hide();
@@ -282,21 +335,21 @@ function maybeSetText(tag,text){
   });
 
   $(document).ready(function(){
-    addEventListenerToFileUploads();
+    UI_state.file_manipulation_functions.addEventListenerToFileUploads();
 
     $('#BilingualPE').click(function(e){
       if (!$('#PostEditionTable').is(':empty')) {
         var EditedMT_html=[];
         $('#PostEditionTable textarea').each( function(){EditedMT_html.push( $(this).val() );});
-        const valid_files = ((files_contents["Untranslated_PE"] !== undefined && files_contents["Translated_PE"] !== undefined)
-        || (!$('#BilingualPE').is(":checked") && files_contents["Translated_PE"] !== undefined));
+        const valid_files = ((UI_state.files_contents["Untranslated_PE"] !== undefined && UI_state.files_contents["Translated_PE"] !== undefined)
+        || (!$('#BilingualPE').is(":checked") && UI_state.files_contents["Translated_PE"] !== undefined));
 
         const bilingualPE = $('#BilingualPE').is(":checked");
         if(valid_files)
         {
 
-                var a = files_contents["Translated_PE"].split('\n');
-                var b = bilingualPE? files_contents["Untranslated_PE"].split('\n') : a;
+                var a = UI_state.files_contents["Translated_PE"].split('\n');
+                var b = bilingualPE? UI_state.files_contents["Untranslated_PE"].split('\n') : a;
 
                 $('#PostEditionTable').html(createPEorDiffTableContent(b,(EditedMT_html[0]===undefined)?a:EditedMT_html,true,bilingualPE));
 
@@ -308,5 +361,4 @@ function maybeSetText(tag,text){
         }
       }
     });
-
 });
