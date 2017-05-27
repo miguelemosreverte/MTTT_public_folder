@@ -68,20 +68,6 @@ UI_state.file_manipulation_functions = {
       this.value=null;
   },
 
-  upload : function (username, blobOrFile) {
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', '/uploadFiles', true);
-      xhr.onloadend = function (e) {
-          uploaders.pop();
-          if (!uploaders.length) {
-              console.log(' All Done! ');
-          }
-      };
-      uploaders.push(xhr);
-      //xhr.send(blobOrFile);
-      xhr.send(JSON.stringify({ name : username, text: blobOrFile}))
-  },
-
   handleFileSelect : function (evt) {
 
       //tag examples: "LM" indicates that the file should be saved as the Language Model
@@ -115,26 +101,8 @@ UI_state.file_manipulation_functions = {
           $(UI_state.constants.text_locations[tag]).text(e.target.result);
         }
 
-
-        blob = UI_state.files_contents[tag]
-        var BYTES_PER_CHUNK, SIZE, NUM_CHUNKS, start, end;
-
-        BYTES_PER_CHUNK = 1048576;
-        SIZE = blob.size;
-        NUM_CHUNKS = Math.max(Math.ceil(SIZE / BYTES_PER_CHUNK), 1);
-        start = 0;
-        end = BYTES_PER_CHUNK;
-        while (start < SIZE) {
-            upload(tag, blob.slice(start, end));
-            start = end;
-            end = start + BYTES_PER_CHUNK;
-        }
       }
-
-      // Read in the image file as a binary string.
-      const file = evt.target.files[0]
-      reader.readAsText(file, 'utf-8');
-      //reader.readAsDataURL( file )
+      reader.readAsText(evt.target.files[0], 'utf-8');
     }
 
 }
@@ -306,7 +274,7 @@ UI_state.file_manipulation_functions = {
         else if(UI_state.files_contents["TM_target"] === undefined) {alert("Set a target for Translation Model");}
         else if(UI_state.files_contents["LM"] === undefined) {alert("Set a file for the Language Model");}
         else{
-            //TryToPostTheCorpusPreparation();
+            TryToPostTheCorpusPreparation();
         }
     });
   });
