@@ -299,7 +299,7 @@
         $.ajax({
                   url:'SetUsername',
                   type:'POST',
-                  data: $('#upload_username_input').val()
+                  data: {"username":$('#upload_username_input').val()}
 
         });
       });
